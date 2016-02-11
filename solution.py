@@ -17,7 +17,6 @@ def distance(x, y):
 
 def nline(f):
     val = f.readline().strip()
-    # print(val)
     return val
 
 def main(f):
@@ -35,14 +34,10 @@ def main(f):
         orders[index]['pos'] = Point(*map(int, nline(f).split()))
         nline(f)
         orders[index]['products'] = list(sorted(map(int, nline(f).split())))
-    # print(len(products), drone_quantity, len(orders), sim_deadline, warehouses[0], orders[0])
-    # print(drone_max_load)
     for order_index, order in orders.items():
-        # print(order['products'])
         print(2 * len(order['products']))
         for order_product in order['products']:
-            w = next(i for i, w in warehouses.items() if w['products'][order_product] != 0)
-            # print("Warehouse for product", order_product, w, warehouses[w])
+            w = next(i for i, w in warehouses.items() if w['products'][order_product])
             drone = 0
             quantity = 1
             print("{} L {} {} {}".format(drone, w, order_product, quantity))
