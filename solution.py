@@ -34,15 +34,20 @@ def main(f):
         orders[index]['pos'] = Point(*map(int, nline(f).split()))
         nline(f)
         orders[index]['products'] = list(sorted(map(int, nline(f).split())))
+    moves = []
     for order_index, order in orders.items():
-        print(2 * len(order['products']))
         for order_product in order['products']:
             w = next(i for i, w in warehouses.items() if w['products'][order_product])
-            drone = 0
+            drone = order_index % drone_quantity
             quantity = 1
-            print("{} L {} {} {}".format(drone, w, order_product, quantity))
-            print("{} D {} {} {}".format(drone, order_index, order_product, quantity))
-        break
+            moves.append("{} L {} {} {}".format(drone, w, order_product, quantity))
+            warehouses[w]['products'][order_product] -= 1
+            moves.append("{} D {} {} {}".format(drone, order_index, order_product, quantity))
+        if order_index > 1000:
+            break
+    print(len(moves))
+    for move in moves:
+        print(move)
 
 
 
