@@ -19,8 +19,15 @@ def nline(f):
     val = f.readline().strip()
     return val
 
-def choose_drone(order_index, drone_positions):
-    return order_index % drone_positions
+def choose_drone(order_index, drone_positions, drone_turns, sim_deadline):
+    index = order_index % len(drone_positions)
+    if drone_turns[index] + 1200 < sim_deadline:
+        return index
+    else:
+        for index in range(len(drone_positions)):
+            if drone_turns[index] + 1200 < sim_deadline:
+                return index
+    return None
 
 def main(f):
     rows, columns, drone_quantity, sim_deadline, drone_max_load = map(int, nline(f).split())
@@ -39,17 +46,24 @@ def main(f):
         orders[index]['products'] = list(sorted(map(int, nline(f).split())))
     retired_drones = set()
     drone_positions = {x: warehouses[0]['pos'] for x in range(drone_quantity)}
+    drone_turns = {x: 0 for x in range(drone_quantity)}
     moves = []
     for order_index, order in orders.items():
         for order_product in order['products']:
             w = next(i for i, w in warehouses.items() if w['products'][order_product])
-            drone = choose_drone(order_index, drone_positions)
+            drone = choose_drone(order_index, drone_positions, drone_turns, sim_deadline)
+            if drone is None:
+                break
             quantity = 1
             moves.append("{} L {} {} {}".format(drone, w, order_product, quantity))
+            drone_turns[drone] += 1 + distance(drone_positions[drone], warehouses[w]['pos'])
+            drone_positions[drone] = warehouses[w]['pos']
             warehouses[w]['products'][order_product] -= 1
             moves.append("{} D {} {} {}".format(drone, order_index, order_product, quantity))
-        if order_index > 900:
-            break
+            drone_turns[drone] += 1 + distance(drone_positions[drone], order['pos'])
+            drone_positions[drone] = order['pos']
+        # if order_index > 900:
+        #     break
     print(len(moves))
     for move in moves:
         print(move)
