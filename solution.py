@@ -50,7 +50,8 @@ def main(f):
     moves = []
     for order_index, order in orders.items():
         for order_product in order['products']:
-            w = next(i for i, w in warehouses.items() if w['products'][order_product])
+            potential_warehouses = [i for i, w in warehouses.items() if w['products'][order_product]]
+            w = min(potential_warehouses, key=lambda i: distance(order['pos'], warehouses[i]['pos']))
             drone = choose_drone(order_index, drone_positions, drone_turns, sim_deadline)
             if drone is None:
                 break
@@ -62,8 +63,6 @@ def main(f):
             moves.append("{} D {} {} {}".format(drone, order_index, order_product, quantity))
             drone_turns[drone] += 1 + distance(drone_positions[drone], order['pos'])
             drone_positions[drone] = order['pos']
-        # if order_index > 900:
-        #     break
     print(len(moves))
     for move in moves:
         print(move)
