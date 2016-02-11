@@ -44,25 +44,37 @@ def main(f):
         orders[index]['pos'] = Point(*map(int, nline(f).split()))
         nline(f)
         orders[index]['products'] = list(sorted(map(int, nline(f).split())))
+        orders[index]['product_qty'] = defaultdict(int)
+        for p in orders[index]['products']:
+            orders[index]['product_qty'][p] += 1
+
     retired_drones = set()
     drone_positions = {x: warehouses[0]['pos'] for x in range(drone_quantity)}
     drone_turns = {x: 0 for x in range(drone_quantity)}
     moves = []
     for order_index, order in orders.items():
-        for order_product in order['products']:
-            potential_warehouses = [i for i, w in warehouses.items() if w['products'][order_product]]
-            w = min(potential_warehouses, key=lambda i: distance(order['pos'], warehouses[i]['pos']))
+        for order_product, qty in order['product_qty'].items():
             drone = choose_drone(order_index, drone_positions, drone_turns, sim_deadline)
             if drone is None:
                 break
-            quantity = 1
-            moves.append("{} L {} {} {}".format(drone, w, order_product, quantity))
-            drone_turns[drone] += 1 + distance(drone_positions[drone], warehouses[w]['pos'])
-            drone_positions[drone] = warehouses[w]['pos']
-            warehouses[w]['products'][order_product] -= 1
-            moves.append("{} D {} {} {}".format(drone, order_index, order_product, quantity))
-            drone_turns[drone] += 1 + distance(drone_positions[drone], order['pos'])
-            drone_positions[drone] = order['pos']
+            max_qty = drone_max_load // products[order_product]
+            qty_left = min(max_qty, qty)
+
+            while qty_left > 0:
+                potential_warehouses = [i for i, w in warehouses.items() if w['products'][order_product]]
+                w = min(potential_warehouses,
+                        key=lambda i: distance(drone_positions[drone], warehouses[i]['pos']) + \
+                        distance(warehouses[i]['pos'], order['pos']))
+                quantity = min(qty_left, warehouses[w]['products'][order_product])
+                qty_left -= quantity
+
+                moves.append("{} L {} {} {}".format(drone, w, order_product, quantity))
+                drone_turns[drone] += 1 + distance(drone_positions[drone], warehouses[w]['pos'])
+                drone_positions[drone] = warehouses[w]['pos']
+                warehouses[w]['products'][order_product] -= quantity
+                moves.append("{} D {} {} {}".format(drone, order_index, order_product, quantity))
+                drone_turns[drone] += 1 + distance(drone_positions[drone], order['pos'])
+                drone_positions[drone] = order['pos']
     print(len(moves))
     for move in moves:
         print(move)
