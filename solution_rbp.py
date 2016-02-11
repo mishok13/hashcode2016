@@ -19,20 +19,18 @@ def nline(f):
     val = f.readline().strip()
     return val
 
-def choose_drone(order, order_index, drone_positions, drone_turns, sim_deadline, max_turns):
-    index = max(drone_positions.keys(), key=lambda d: distance(order['pos'], drone_positions[d]))
-    # index = order_index % len(drone_positions)
-    if drone_turns[index] + 2 * max_turns < sim_deadline:
+def choose_drone(order_index, drone_positions, drone_turns, sim_deadline):
+    index = order_index % len(drone_positions)
+    if drone_turns[index] + 1200 < sim_deadline:
         return index
     else:
         for index in range(len(drone_positions)):
-            if drone_turns[index] + 2 * max_turns < sim_deadline:
+            if drone_turns[index] + 1200 < sim_deadline:
                 return index
     return None
 
 def main(f):
     rows, columns, drone_quantity, sim_deadline, drone_max_load = map(int, nline(f).split())
-    max_turns = distance(Point(0, 0), Point(rows, columns)) + 1
     nline(f)
     products = dict(enumerate(map(int, nline(f).split())))
     num_warehouses = int(nline(f))
@@ -56,9 +54,7 @@ def main(f):
     moves = []
     for order_index, order in orders.items():
         for order_product, qty in order['product_qty'].items():
-            drone = choose_drone(order, order_index, drone_positions, drone_turns, sim_deadline, max_turns)
-            potential_warehouses = [i for i, w in warehouses.items() if w['products'][order_product]]
-            w = min(potential_warehouses, key=lambda i: distance(order['pos'], warehouses[i]['pos']))
+            drone = choose_drone(order_index, drone_positions, drone_turns, sim_deadline)
             if drone is None:
                 break
             max_qty = drone_max_load // products[order_product]
