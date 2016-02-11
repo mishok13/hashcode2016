@@ -54,7 +54,7 @@ def main(f):
     drone_positions = {x: warehouses[0]['pos'] for x in range(drone_quantity)}
     drone_turns = {x: 0 for x in range(drone_quantity)}
     moves = []
-    for order_index, order in orders.items():
+    for order_index, order in sorted(orders.items(), key=lambda o: len(o[1]['products'])):
         for order_product, qty in order['product_qty'].items():
             drone = choose_drone(order, order_index, drone_positions, drone_turns, sim_deadline, max_turns)
             potential_warehouses = [i for i, w in warehouses.items() if w['products'][order_product]]
