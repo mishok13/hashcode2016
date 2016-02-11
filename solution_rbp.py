@@ -11,6 +11,35 @@ import sys
 Point = namedtuple("Point", field_names=['a', 'b'])
 
 
+class Move:
+    def __init__(self, load, deliver):
+        self.load = load
+        self.deliver = deliver
+
+class Load:
+    def __init__(self, drone, warehouse, warehouse_index, product_type, quantity):
+        self.drone = drone
+        self.warehouse = warehouse
+        self.warehouse_index = warehouse_index
+        self.product_type = product_type
+        self.quantity = quantity
+
+    def __str__(self):
+        return "{} L {} {} {}".format(self.drone, self.warehouse, self.product_type, self.quantity)
+
+
+class Deliver:
+    def __init__(self, drone, order, order_index, product_type, quantity):
+        self.drone = drone
+        self.order = order
+        self.order_index = order_index
+        self.product_type = product_type
+        self.quantity = quantity
+    
+    def __str__(self):
+        return "{} D {} {} {}".format(self.drone, self.order, self.product_type, self.quantity)
+
+
 def distance(x, y):
     return int(math.ceil(math.sqrt((x.a - y.a)**2 + (x.b - y.b)**2)))
 
@@ -72,16 +101,32 @@ def main(f):
                 quantity = min(qty_left, warehouses[w]['products'][order_product])
                 qty_left -= quantity
 
-                moves.append("{} L {} {} {}".format(drone, w, order_product, quantity))
+                moves.append(Move(
+                    Load(drone, warehouses[w], w, order_product, quantity),
+                    Deliver(drone, order, order_index, order_product, quantity)
+                ))
+
                 drone_turns[drone] += 1 + distance(drone_positions[drone], warehouses[w]['pos'])
                 drone_positions[drone] = warehouses[w]['pos']
                 warehouses[w]['products'][order_product] -= quantity
-                moves.append("{} D {} {} {}".format(drone, order_index, order_product, quantity))
                 drone_turns[drone] += 1 + distance(drone_positions[drone], order['pos'])
                 drone_positions[drone] = order['pos']
+
+    moves_per_order = defaultdict(list)
+    for m in moves:
+        moves_per_order[m.deliver.order_index].append(m)
+    for i, move_list in moves_per_order.items():
+        move_list.sort(key=lambda m: distance(m.deliver.order['pos'], m.load.warehouse['pos']))
+
+    order_moves = []
+    for m in moves:
+        # Assign drones
+        pass
+            
     print(len(moves))
     for move in moves:
-        print(move)
+        print(move.load)
+        print(move.deliver)
 
 
 
