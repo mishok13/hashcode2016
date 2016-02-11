@@ -43,7 +43,7 @@ def main(f):
             moves.append("{} L {} {} {}".format(drone, w, order_product, quantity))
             warehouses[w]['products'][order_product] -= 1
             moves.append("{} D {} {} {}".format(drone, order_index, order_product, quantity))
-        if order_index > 1000:
+        if order_index > 750:
             break
     print(len(moves))
     for move in moves:
